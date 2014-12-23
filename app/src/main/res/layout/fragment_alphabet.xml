@@ -8,7 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:columnWidth="100dp"
-        android:numColumns="4"
+        android:numColumns="3"
         android:verticalSpacing="20dp"
         android:horizontalSpacing="20dp"
         android:layout_margin="20dp"
