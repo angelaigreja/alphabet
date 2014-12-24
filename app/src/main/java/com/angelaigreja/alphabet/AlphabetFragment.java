@@ -12,12 +12,10 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.TextView;
-
 import java.util.Locale;
 
-
 /**
- * A simple {@link Fragment} subclass.
+ * {@link Fragment} that appears in the "content_frame and shows to alphabet for the selected language.
  * Activities that contain this fragment must implement the
  * {@link AlphabetFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
@@ -25,25 +23,43 @@ import java.util.Locale;
  * create an instance of this fragment.
  */
 public class AlphabetFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
+
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    public static final String ARG_LANGUAGE = "language";
+    //private static final String ARG_PARAM2 = "param2";
 
     // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private int mLanguage;
+    //private String mParam2;
 
     private OnFragmentInteractionListener mListener;
 
-    static final String[] letters = new String[] {
 
+    private String[] letters = new String[] {
             "A", "B", "C", "D", "E",
             "F", "G", "H", "I", "J",
             "K", "L", "M", "N", "O",
             "P", "Q", "R", "S", "T",
             "U", "V", "W", "X", "Y", "Z"
     };
+
+
+    private static final String[] ENGLISH = new String[] {
+            "A", "B", "C", "D", "E",
+            "F", "G", "H", "I", "J",
+            "K", "L", "M", "N", "O",
+            "P", "Q", "R", "S", "T",
+            "U", "V", "W", "X", "Y", "Z"
+    };
+
+   private static final String[] GERMAN = new String[] {
+            "A", "B", "C", "D", "E",
+            "F", "G", "H", "I", "J",
+            "K", "L", "M", "N", "O",
+            "P", "Q", "R", "S", "T",
+            "U", "V", "W", "X", "Y", "Z", "Ä","Ö", "Ü", "ß"
+    };
+
 
     TextToSpeech ttobj;
     /**
@@ -58,8 +74,8 @@ public class AlphabetFragment extends Fragment {
     public static AlphabetFragment newInstance(String param1, String param2) {
         AlphabetFragment fragment = new AlphabetFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
+        //args.putString(ARG_PARAM1, param1);
+        // args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
     }
@@ -72,15 +88,18 @@ public class AlphabetFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+            //mParam1 = getArguments().getString(ARG_PARAM1);
+            //mParam2 = getArguments().getString(ARG_PARAM2);
+            mLanguage =  getArguments().getInt(ARG_LANGUAGE);
         }
 
         ttobj = new TextToSpeech(getActivity().getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
                 if(status != TextToSpeech.ERROR){
-                    ttobj.setLanguage(Locale.UK);
+                    String language = getResources().getStringArray(R.array.languages)[ mLanguage];
+                    Locale l = new Locale(language);
+                    ttobj.setLanguage(l);
                 }
             }
 
@@ -94,9 +113,21 @@ public class AlphabetFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_alphabet, container, false);
+        mLanguage =  getArguments().getInt(ARG_LANGUAGE);
+        String language = getResources().getStringArray(R.array.languages)[mLanguage];
+        getActivity().setTitle(language);
         GridView gridView = (GridView) rootView.findViewById(R.id.gridview);
-
+        Locale locale = new Locale(language);
+        //UnicodeSet unicodeSet = locale.getExemplarSet(0,ES_STANDARD);
+        //Set<String> lettersSet = locale.getUnicodeLocaleKeys();
+        //String[] letters =  lettersSet.toArray(new String[ lettersSet.size()]);
         // Create adapter to set value for grid view
+        if(language == "ENGLISH"){
+            letters = ENGLISH;
+        }
+        if(language == "GERMAN"){
+            letters = GERMAN;
+        }
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
                R.layout.card, R.id.letter, letters);
 
