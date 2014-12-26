@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +23,7 @@ import java.util.Locale;
  * Use the {@link AlphabetFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class AlphabetFragment extends Fragment {
+public class AlphabetFragment extends Fragment implements TextToSpeech.OnInitListener{
 
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     public static final String ARG_LANGUAGE = "language";
@@ -44,7 +45,7 @@ public class AlphabetFragment extends Fragment {
     };
 
 
-    private static final String[] ENGLISH = new String[] {
+    private String[] ENGLISH = new String[] {
             "A", "B", "C", "D", "E",
             "F", "G", "H", "I", "J",
             "K", "L", "M", "N", "O",
@@ -52,7 +53,7 @@ public class AlphabetFragment extends Fragment {
             "U", "V", "W", "X", "Y", "Z"
     };
 
-   private static final String[] GERMAN = new String[] {
+   private  String[] GERMAN = new String[] {
             "A", "B", "C", "D", "E",
             "F", "G", "H", "I", "J",
             "K", "L", "M", "N", "O",
@@ -61,7 +62,13 @@ public class AlphabetFragment extends Fragment {
     };
 
 
-    TextToSpeech ttobj;
+    TextToSpeech tts;
+
+    GridView gridView;
+
+
+
+
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
@@ -93,20 +100,37 @@ public class AlphabetFragment extends Fragment {
             mLanguage =  getArguments().getInt(ARG_LANGUAGE);
         }
 
-        ttobj = new TextToSpeech(getActivity().getApplicationContext(), new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if(status != TextToSpeech.ERROR){
-                    String language = getResources().getStringArray(R.array.languages)[ mLanguage];
-                    Locale l = new Locale(language);
-                    ttobj.setLanguage(l);
-                }
+        tts = new TextToSpeech(getActivity().getApplicationContext(), this);
+    }
+
+    @Override
+    public void onInit(int status) {
+        if (status == TextToSpeech.SUCCESS) {
+            switch(mLanguage){
+                case 0:
+                    tts.setLanguage(Locale.ENGLISH);
+                case 1:
+                    tts.setLanguage(Locale.GERMANY);
+                /*default:
+                    tts.setLanguage(Locale.getDefault());*/
             }
 
-        }
-        );
+            gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
+                @Override
+                public void onItemClick(AdapterView<?> parent, View v,
+                                        int position, long id) {
+                    String toSpeak = ((TextView) v.findViewById(R.id.letter)).getText().toString();
+                    CharSequence cs = toSpeak;
+                    tts.speak(cs, TextToSpeech.QUEUE_FLUSH, null, toSpeak);
+                }
+            });
+
+        } else {
+            Log.e("TTS", "Initialization failed");
+        }
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -116,38 +140,32 @@ public class AlphabetFragment extends Fragment {
         mLanguage =  getArguments().getInt(ARG_LANGUAGE);
         String language = getResources().getStringArray(R.array.languages)[mLanguage];
         getActivity().setTitle(language);
-        GridView gridView = (GridView) rootView.findViewById(R.id.gridview);
-        Locale locale = new Locale(language);
+        gridView = (GridView) rootView.findViewById(R.id.gridview);
         //UnicodeSet unicodeSet = locale.getExemplarSet(0,ES_STANDARD);
         //Set<String> lettersSet = locale.getUnicodeLocaleKeys();
         //String[] letters =  lettersSet.toArray(new String[ lettersSet.size()]);
         // Create adapter to set value for grid view
-        if(language == "ENGLISH"){
+        /*if(language.equalsIgnoreCase("ENGLISH")){
             letters = ENGLISH;
         }
-        if(language == "GERMAN"){
+        if(language.equalsIgnoreCase("GERMAN")){
             letters = GERMAN;
+        } */
+        switch(mLanguage){
+            case 1:
+                letters = ENGLISH;
+            case 2:
+                letters = GERMAN;
         }
+
+
+
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
                R.layout.card, R.id.letter, letters);
 
 
         gridView.setAdapter(adapter);
 
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View v,
-                                    int position, long id) {
-
-                String toSpeak = ((TextView) v.findViewById(R.id.letter)).getText().toString();
-                CharSequence cs = toSpeak;
-                /*Toast.makeText(getActivity().getApplicationContext(), toSpeak,
-                        Toast.LENGTH_SHORT).show(); */
-                ttobj.speak(cs, TextToSpeech.QUEUE_FLUSH, null, toSpeak);
-
-            }
-        });
 
         return rootView;
     }
@@ -193,9 +211,9 @@ public class AlphabetFragment extends Fragment {
 
     @Override
     public void onPause(){
-        if(ttobj !=null){
-            ttobj.stop();
-            ttobj.shutdown();
+        if(tts !=null){
+            tts.stop();
+            tts.shutdown();
         }
         super.onPause();
     }

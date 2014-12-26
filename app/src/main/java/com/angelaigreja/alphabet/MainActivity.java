@@ -29,6 +29,8 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import static com.angelaigreja.alphabet.R.drawable.germany;
+
 public class MainActivity extends Activity {
 
     private DrawerLayout mDrawerLayout;
@@ -38,6 +40,11 @@ public class MainActivity extends Activity {
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
     private String[] mLanguages;
+
+
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +62,9 @@ public class MainActivity extends Activity {
         mDrawerList.setAdapter(new ArrayAdapter<String>(this,
                 R.layout.navdrawer_item, mLanguages));
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+
+        //ImageView image  = (ImageView) findViewById(R.id.flag);
+        //image.setImageResource(R.drawable.ic_drawer);
 
         // enable ActionBar app icon to behave as action to toggle nav drawer
         getActionBar().setDisplayHomeAsUpEnabled(true);
