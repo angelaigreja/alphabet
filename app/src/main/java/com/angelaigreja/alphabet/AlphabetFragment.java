@@ -1,11 +1,8 @@
 package com.angelaigreja.alphabet;
 
 import android.app.Activity;
-import android.net.Uri;
-import android.os.Bundle;
 import android.app.Fragment;
-import android.speech.tts.TextToSpeech;
-import android.util.Log;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,30 +10,19 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.TextView;
-import java.util.Locale;
 
 /**
  * {@link Fragment} that appears in the "content_frame and shows to alphabet for the selected language.
- * Activities that contain this fragment must implement the
- * {@link AlphabetFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
  * Use the {@link AlphabetFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class AlphabetFragment extends Fragment implements TextToSpeech.OnInitListener{
+public class AlphabetFragment extends Fragment {
 
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    public static final String ARG_LANGUAGE = "language";
-    //private static final String ARG_PARAM2 = "param2";
+    private static final String ARG_LANGUAGE = "language";
 
-    // TODO: Rename and change types of parameters
     private int mLanguage;
-    //private String mParam2;
 
-    private OnFragmentInteractionListener mListener;
-
-
-    private String[] letters = new String[] {
+    private String[] letters = new String[]{
             "A", "B", "C", "D", "E",
             "F", "G", "H", "I", "J",
             "K", "L", "M", "N", "O",
@@ -45,7 +31,7 @@ public class AlphabetFragment extends Fragment implements TextToSpeech.OnInitLis
     };
 
 
-    private String[] ENGLISH = new String[] {
+    private String[] ENGLISH = new String[]{
             "A", "B", "C", "D", "E",
             "F", "G", "H", "I", "J",
             "K", "L", "M", "N", "O",
@@ -53,93 +39,52 @@ public class AlphabetFragment extends Fragment implements TextToSpeech.OnInitLis
             "U", "V", "W", "X", "Y", "Z"
     };
 
-   private  String[] GERMAN = new String[] {
+    private String[] GERMAN = new String[]{
             "A", "B", "C", "D", "E",
             "F", "G", "H", "I", "J",
             "K", "L", "M", "N", "O",
             "P", "Q", "R", "S", "T",
-            "U", "V", "W", "X", "Y", "Z", "Ä","Ö", "Ü", "ß"
+            "U", "V", "W", "X", "Y", "Z",
+            "Ä", "Ö", "Ü", "ß"
     };
 
 
-    TextToSpeech tts;
+    private GridView gridView;
+    private FragmentListener mListener;
 
-    GridView gridView;
-
-
-
+    public AlphabetFragment() {
+        // Required empty public constructor
+    }
 
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
+     * @param language Integer for the languages resources.
      * @return A new instance of fragment AlphabetFragment.
      */
-    // TODO: Rename and change types and number of parameters
-    public static AlphabetFragment newInstance(String param1, String param2) {
+    public static AlphabetFragment newInstance(int language) {
         AlphabetFragment fragment = new AlphabetFragment();
         Bundle args = new Bundle();
-        //args.putString(ARG_PARAM1, param1);
-        // args.putString(ARG_PARAM2, param2);
+        args.putInt(ARG_LANGUAGE, language);
         fragment.setArguments(args);
         return fragment;
-    }
-
-    public AlphabetFragment() {
-        // Required empty public constructor
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            //mParam1 = getArguments().getString(ARG_PARAM1);
-            //mParam2 = getArguments().getString(ARG_PARAM2);
-            mLanguage =  getArguments().getInt(ARG_LANGUAGE);
+            mLanguage = getArguments().getInt(ARG_LANGUAGE);
         }
 
-        tts = new TextToSpeech(getActivity().getApplicationContext(), this);
     }
-
-    @Override
-    public void onInit(int status) {
-        if (status == TextToSpeech.SUCCESS) {
-            switch(mLanguage){
-                case 0:
-                    tts.setLanguage(Locale.ENGLISH);
-                case 1:
-                    tts.setLanguage(Locale.GERMANY);
-                /*default:
-                    tts.setLanguage(Locale.getDefault());*/
-            }
-
-            gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-                @Override
-                public void onItemClick(AdapterView<?> parent, View v,
-                                        int position, long id) {
-                    String toSpeak = ((TextView) v.findViewById(R.id.letter)).getText().toString();
-                    CharSequence cs = toSpeak;
-                    tts.speak(cs, TextToSpeech.QUEUE_FLUSH, null, toSpeak);
-                }
-            });
-
-        } else {
-            Log.e("TTS", "Initialization failed");
-        }
-    }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_alphabet, container, false);
-        mLanguage =  getArguments().getInt(ARG_LANGUAGE);
-        String language = getResources().getStringArray(R.array.languages)[mLanguage];
-        getActivity().setTitle(language);
+        final View rootView = inflater.inflate(R.layout.fragment_alphabet, container, false);
         gridView = (GridView) rootView.findViewById(R.id.gridview);
         //UnicodeSet unicodeSet = locale.getExemplarSet(0,ES_STANDARD);
         //Set<String> lettersSet = locale.getUnicodeLocaleKeys();
@@ -151,7 +96,7 @@ public class AlphabetFragment extends Fragment implements TextToSpeech.OnInitLis
         if(language.equalsIgnoreCase("GERMAN")){
             letters = GERMAN;
         } */
-        switch(mLanguage){
+        switch (mLanguage) {
             case 1:
                 letters = ENGLISH;
             case 2:
@@ -159,33 +104,25 @@ public class AlphabetFragment extends Fragment implements TextToSpeech.OnInitLis
         }
 
 
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
-               R.layout.card, R.id.letter, letters);
+        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
+                R.layout.card, R.id.letter, letters);
 
 
         gridView.setAdapter(adapter);
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
+            @Override
+            public void onItemClick(AdapterView<?> parent, View v,
+                                    int position, long id) {
+                String toSpeak = ((TextView) v.findViewById(R.id.letter)).getText().toString();
+                if (mListener != null) {
+                    mListener.onLetterClick(toSpeak);
+                }
+                //tts.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null, null);
+            }
+        });
 
         return rootView;
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        /*try {
-            mListener = (OnFragmentInteractionListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }*/
     }
 
     @Override
@@ -194,29 +131,18 @@ public class AlphabetFragment extends Fragment implements TextToSpeech.OnInitLis
         mListener = null;
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        public void onFragmentInteraction(Uri uri);
-    }
-
     @Override
-    public void onPause(){
-        if(tts !=null){
-            tts.stop();
-            tts.shutdown();
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if (activity instanceof FragmentListener) {
+            mListener = (FragmentListener) activity;
+        } else {
+            throw new RuntimeException("Activity must implement FragmentListener");
         }
-        super.onPause();
     }
 
+    public interface FragmentListener {
+        void onLetterClick(String letter);
+    }
 
 }

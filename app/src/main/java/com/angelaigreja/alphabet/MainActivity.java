@@ -1,37 +1,22 @@
 package com.angelaigreja.alphabet;
 
 import android.app.Activity;
+import android.content.res.Configuration;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
+import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.widget.DrawerLayout;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 import java.util.Locale;
 
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.SearchManager;
-import android.content.Intent;
-import android.content.res.Configuration;
-import android.os.Bundle;
-import android.support.v4.app.ActionBarDrawerToggle;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.Toast;
-
-import static com.angelaigreja.alphabet.R.drawable.germany;
-
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements TextToSpeech.OnInitListener, AlphabetFragment.FragmentListener {
 
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
@@ -41,15 +26,14 @@ public class MainActivity extends Activity {
     private CharSequence mTitle;
     private String[] mLanguages;
 
-
-
-
-
+    private TextToSpeech tts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        tts = new TextToSpeech(this, this);
 
         mTitle = mDrawerTitle = getTitle();
         mLanguages = getResources().getStringArray(R.array.languages);
@@ -75,7 +59,7 @@ public class MainActivity extends Activity {
         mDrawerToggle = new ActionBarDrawerToggle(
                 this,                  /* host Activity */
                 mDrawerLayout,         /* DrawerLayout object */
-                R.drawable.ic_drawer,  /* nav drawer image to replace 'Up' caret */
+                R.drawable.ic_drawer,  /* nav drawer image to replace 'Up'  caret */
                 R.string.drawer_open,  /* "open drawer" description for accessibility */
                 R.string.drawer_close  /* "close drawer" description for accessibility */
         ) {
@@ -112,7 +96,7 @@ public class MainActivity extends Activity {
         }
 
         // Handle action buttons
-        switch(item.getItemId()) {
+        switch (item.getItemId()) {
             case R.id.action_settings:
                 return true;
             default:
@@ -120,28 +104,26 @@ public class MainActivity extends Activity {
         }
     }
 
-
-    /* The click listner for ListView in the navigation drawer */
-    private class DrawerItemClickListener implements ListView.OnItemClickListener {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            selectItem(position);
-        }
+    @Override
+    public void onLetterClick(String letter) {
+        tts.speak(letter, TextToSpeech.QUEUE_FLUSH, null, null);
     }
 
     private void selectItem(int position) {
         // update the main content by replacing fragments
-        Fragment fragment = new AlphabetFragment();
-        Bundle args = new Bundle();
-        args.putInt(AlphabetFragment.ARG_LANGUAGE, position);
-        fragment.setArguments(args);
-
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+        getFragmentManager().beginTransaction().replace(R.id.content_frame, AlphabetFragment.newInstance(position)).commit();
 
         // update selected item and title, then close the drawer
         mDrawerList.setItemChecked(position, true);
         setTitle(mLanguages[position]);
+        switch (position) {
+            case 0:
+                tts.setLanguage(Locale.ENGLISH);
+                break;
+            case 1:
+                tts.setLanguage(Locale.GERMANY);
+                break;
+        }
         mDrawerLayout.closeDrawer(mDrawerList);
     }
 
@@ -170,4 +152,32 @@ public class MainActivity extends Activity {
         mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
+    @Override
+    public void onInit(int status) {
+        if (status == TextToSpeech.SUCCESS) {
+            Log.i("TTS", "Initialization finished");
+        } else {
+            Log.e("TTS", "Initialization failed");
+        }
+    }
+
+    @Override
+    public void onPause() {
+        tts.stop();
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        tts.shutdown();
+    }
+
+    /* The click listner for ListView in the navigation drawer */
+    private class DrawerItemClickListener implements ListView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            selectItem(position);
+        }
+    }
 }
