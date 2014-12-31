@@ -6,6 +6,9 @@
     <color name="body_text_3">#60000000</color>
     <color name="body_text_disabled">#44000000</color>
 
+    <color name="background">#1b000000</color>
+
+
     <color name="body_text_1_inverse">#deffffff</color>
     <color name="body_text_2_inverse">#8affffff</color>
 

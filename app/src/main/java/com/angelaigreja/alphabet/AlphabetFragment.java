@@ -19,27 +19,14 @@ import android.widget.TextView;
 public class AlphabetFragment extends Fragment {
 
     private static final String ARG_LANGUAGE = "language";
-
-    private int mLanguage;
-
-    private String[] letters = new String[]{
+    private static final String[] ENGLISH = new String[]{
             "A", "B", "C", "D", "E",
             "F", "G", "H", "I", "J",
             "K", "L", "M", "N", "O",
             "P", "Q", "R", "S", "T",
             "U", "V", "W", "X", "Y", "Z"
     };
-
-
-    private String[] ENGLISH = new String[]{
-            "A", "B", "C", "D", "E",
-            "F", "G", "H", "I", "J",
-            "K", "L", "M", "N", "O",
-            "P", "Q", "R", "S", "T",
-            "U", "V", "W", "X", "Y", "Z"
-    };
-
-    private String[] GERMAN = new String[]{
+    private static final String[] GERMAN = new String[]{
             "A", "B", "C", "D", "E",
             "F", "G", "H", "I", "J",
             "K", "L", "M", "N", "O",
@@ -47,8 +34,21 @@ public class AlphabetFragment extends Fragment {
             "U", "V", "W", "X", "Y", "Z",
             "Ä", "Ö", "Ü", "ß"
     };
-
-
+    private static final String[] SPANISH = new String[]{
+            "A", "B", "C", "D", "E",
+            "F", "G", "H", "I", "J",
+            "K", "L", "M", "N", "Ñ", "O",
+            "P", "Q", "R", "S", "T",
+            "U", "V", "W", "X", "Y", "Z"
+    };
+    private int mLanguage;
+    private String[] letters = new String[]{
+            "A", "B", "C", "D", "E",
+            "F", "G", "H", "I", "J",
+            "K", "L", "M", "N", "O",
+            "P", "Q", "R", "S", "T",
+            "U", "V", "W", "X", "Y", "Z"
+    };
     private GridView gridView;
     private FragmentListener mListener;
 
@@ -97,10 +97,18 @@ public class AlphabetFragment extends Fragment {
             letters = GERMAN;
         } */
         switch (mLanguage) {
+            case 0:
+                letters = ENGLISH;
+                break;
             case 1:
                 letters = ENGLISH;
+                break;
             case 2:
                 letters = GERMAN;
+                break;
+            case 3:
+                letters = SPANISH;
+                break;
         }
 
 

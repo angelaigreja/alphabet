@@ -7,13 +7,15 @@ import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends Activity implements TextToSpeech.OnInitListener, AlphabetFragment.FragmentListener {
@@ -43,8 +45,27 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         // set a custom shadow that overlays the main content when the drawer opens
         /* mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);*/
         // set up the drawer's list view with items and click listener
-        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
-                R.layout.navdrawer_item, mLanguages));
+
+
+        // create the grid item mapping
+        int[] flags = {R.drawable.uk, R.drawable.us, R.drawable.germany, R.drawable.spain};
+
+        String[] from = {"flag", "title"};
+        int[] to = new int[]{R.id.flag, R.id.title};
+
+        // prepare the list of all records
+        List<HashMap<String, Object>> fillMaps = new ArrayList<HashMap<String, Object>>();
+        for (int i = 0; i < mLanguages.length; i++) {
+            HashMap<String, Object> map = new HashMap<String, Object>();
+            map.put(from[0], flags[i]);
+            map.put(from[1], mLanguages[i]);
+            fillMaps.add(map);
+        }
+
+        // fill in the grid_item layout
+        SimpleAdapter adapter = new SimpleAdapter(this, fillMaps, R.layout.navdrawer_item, from, to);
+
+        mDrawerList.setAdapter(adapter);
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
         //ImageView image  = (ImageView) findViewById(R.id.flag);
@@ -80,12 +101,6 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -94,14 +109,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         if (mDrawerToggle.onOptionsItemSelected(item)) {
             return true;
         }
-
-        // Handle action buttons
-        switch (item.getItemId()) {
-            case R.id.action_settings:
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -118,10 +126,19 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         setTitle(mLanguages[position]);
         switch (position) {
             case 0:
-                tts.setLanguage(Locale.ENGLISH);
+                tts.setLanguage(Locale.UK);
                 break;
             case 1:
-                tts.setLanguage(Locale.GERMANY);
+                tts.setLanguage(Locale.US);
+                break;
+            case 2:
+                tts.setLanguage(Locale.FRENCH);
+                break;
+            case 3:
+                tts.setLanguage(Locale.GERMAN);
+                break;
+            case 4:
+                tts.setLanguage(Locale.ITALIAN);
                 break;
         }
         mDrawerLayout.closeDrawer(mDrawerList);

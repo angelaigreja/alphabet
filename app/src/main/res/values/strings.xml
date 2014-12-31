@@ -6,8 +6,10 @@
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
     <string-array name="languages">
-        <item>ENGLISH</item>
-        <item>GERMANY</item>
+        <item>ENGLISH UK</item>
+        <item>ENGLISH US</item>
+        <item>GERMAN</item>
+        <item>SPANISH</item>
     </string-array>
 
 </resources>
