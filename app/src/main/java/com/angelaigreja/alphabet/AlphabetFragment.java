@@ -19,36 +19,9 @@ import android.widget.TextView;
 public class AlphabetFragment extends Fragment {
 
     private static final String ARG_LANGUAGE = "language";
-    private static final String[] ENGLISH = new String[]{
-            "A", "B", "C", "D", "E",
-            "F", "G", "H", "I", "J",
-            "K", "L", "M", "N", "O",
-            "P", "Q", "R", "S", "T",
-            "U", "V", "W", "X", "Y", "Z"
-    };
-    private static final String[] GERMAN = new String[]{
-            "A", "B", "C", "D", "E",
-            "F", "G", "H", "I", "J",
-            "K", "L", "M", "N", "O",
-            "P", "Q", "R", "S", "T",
-            "U", "V", "W", "X", "Y", "Z",
-            "Ä", "Ö", "Ü", "ß"
-    };
-    private static final String[] SPANISH = new String[]{
-            "A", "B", "C", "D", "E",
-            "F", "G", "H", "I", "J",
-            "K", "L", "M", "N", "Ñ", "O",
-            "P", "Q", "R", "S", "T",
-            "U", "V", "W", "X", "Y", "Z"
-    };
-    private int mLanguage;
-    private String[] letters = new String[]{
-            "A", "B", "C", "D", "E",
-            "F", "G", "H", "I", "J",
-            "K", "L", "M", "N", "O",
-            "P", "Q", "R", "S", "T",
-            "U", "V", "W", "X", "Y", "Z"
-    };
+    private Language mLanguage;
+
+
     private GridView gridView;
     private FragmentListener mListener;
 
@@ -63,10 +36,10 @@ public class AlphabetFragment extends Fragment {
      * @param language Integer for the languages resources.
      * @return A new instance of fragment AlphabetFragment.
      */
-    public static AlphabetFragment newInstance(int language) {
+    public static AlphabetFragment newInstance(Language language) {
         AlphabetFragment fragment = new AlphabetFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_LANGUAGE, language);
+        args.putParcelable(ARG_LANGUAGE, language);
         fragment.setArguments(args);
         return fragment;
     }
@@ -75,7 +48,7 @@ public class AlphabetFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mLanguage = getArguments().getInt(ARG_LANGUAGE);
+            mLanguage = getArguments().getParcelable(ARG_LANGUAGE);
         }
 
     }
@@ -86,34 +59,9 @@ public class AlphabetFragment extends Fragment {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_alphabet, container, false);
         gridView = (GridView) rootView.findViewById(R.id.gridview);
-        //UnicodeSet unicodeSet = locale.getExemplarSet(0,ES_STANDARD);
-        //Set<String> lettersSet = locale.getUnicodeLocaleKeys();
-        //String[] letters =  lettersSet.toArray(new String[ lettersSet.size()]);
-        // Create adapter to set value for grid view
-        /*if(language.equalsIgnoreCase("ENGLISH")){
-            letters = ENGLISH;
-        }
-        if(language.equalsIgnoreCase("GERMAN")){
-            letters = GERMAN;
-        } */
-        switch (mLanguage) {
-            case 0:
-                letters = ENGLISH;
-                break;
-            case 1:
-                letters = ENGLISH;
-                break;
-            case 2:
-                letters = GERMAN;
-                break;
-            case 3:
-                letters = SPANISH;
-                break;
-        }
 
-
-        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
-                R.layout.card, R.id.letter, letters);
+        final ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(),
+                R.layout.card, R.id.letter, mLanguage.getAlphabet());
 
 
         gridView.setAdapter(adapter);

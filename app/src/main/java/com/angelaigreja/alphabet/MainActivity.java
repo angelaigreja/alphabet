@@ -13,10 +13,20 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class MainActivity extends Activity implements TextToSpeech.OnInitListener, AlphabetFragment.FragmentListener {
 
@@ -26,7 +36,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
-    private String[] mLanguages;
+    private List<Language> mLanguages;
 
     private TextToSpeech tts;
 
@@ -38,34 +48,9 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         tts = new TextToSpeech(this, this);
 
         mTitle = mDrawerTitle = getTitle();
-        mLanguages = getResources().getStringArray(R.array.languages);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
-        // set a custom shadow that overlays the main content when the drawer opens
-        /* mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);*/
-        // set up the drawer's list view with items and click listener
-
-
-        // create the grid item mapping
-        int[] flags = {R.drawable.uk, R.drawable.us, R.drawable.germany, R.drawable.spain};
-
-        String[] from = {"flag", "title"};
-        int[] to = new int[]{R.id.flag, R.id.title};
-
-        // prepare the list of all records
-        List<HashMap<String, Object>> fillMaps = new ArrayList<HashMap<String, Object>>();
-        for (int i = 0; i < mLanguages.length; i++) {
-            HashMap<String, Object> map = new HashMap<String, Object>();
-            map.put(from[0], flags[i]);
-            map.put(from[1], mLanguages[i]);
-            fillMaps.add(map);
-        }
-
-        // fill in the grid_item layout
-        SimpleAdapter adapter = new SimpleAdapter(this, fillMaps, R.layout.navdrawer_item, from, to);
-
-        mDrawerList.setAdapter(adapter);
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
         //ImageView image  = (ImageView) findViewById(R.id.flag);
@@ -95,10 +80,75 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             }
         };
         mDrawerLayout.setDrawerListener(mDrawerToggle);
+    }
 
-        if (savedInstanceState == null) {
-            selectItem(0);
+
+    private Map<String, String[]> getAlphabets() {
+
+        try {
+            final JSONObject jsonObject = (JSONObject) new JSONParser().parse(new InputStreamReader(getAssets().open("alphabets.json")));
+            final Iterator<String> nameItr = jsonObject.keySet().iterator();
+            final Map<String, String[]> alphabets = new HashMap<>();
+            while (nameItr.hasNext()) {
+                final String name = nameItr.next();
+                alphabets.put(name, jsonObject.get(name).toString().split("(?!^)"));
+
+            }
+            return alphabets;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
+        return null;
+    }
+
+    private List<Language> getLanguages() {
+
+        try {
+            final JSONArray langArray = (JSONArray) new JSONParser().parse(new InputStreamReader(getAssets().open("languages.json")));
+            final List<Language> languages = new ArrayList<>();
+            final Map<String, String[]> alphabets = getAlphabets();
+            for (int i = 0; i < langArray.size(); i++) {
+                JSONObject langObj = (JSONObject) langArray.get(i);
+                String country = langObj.get("country").toString();
+                String language = langObj.get("language").toString();
+                final Locale loc = new Locale(language, country);
+                final String key = language + country;
+                if (isLocaleTSSSuported(loc)) {
+                    String alphabet = langObj.get("alphabet").toString();
+                    Language lang = new Language(Language.TITLES.get(key), Language.FLAGS.get(key), alphabets.get(alphabet), loc);
+                    languages.add(lang);
+                }
+            }
+            return languages;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private boolean isLocaleTSSSuported(Locale locale) {
+        try {
+            int res = tts.isLanguageAvailable(locale);
+            boolean hasVariant = (null != locale.getVariant() && locale.getVariant().length() > 0);
+            boolean hasCountry = (null != locale.getCountry() && locale.getCountry().length() > 0);
+
+            boolean isLocaleSupported =
+                    !hasVariant && !hasCountry && res == TextToSpeech.LANG_AVAILABLE ||
+                            !hasVariant && hasCountry && res == TextToSpeech.LANG_COUNTRY_AVAILABLE ||
+                            res == TextToSpeech.LANG_COUNTRY_VAR_AVAILABLE;
+
+            return isLocaleSupported;
+        } catch (Exception ex) {
+            Log.e("TTS", "Error checking if language is available for TTS (locale=" + locale + "): " + ex.getClass().getSimpleName() + "-" + ex.getMessage());
+        }
+        return false;
+
     }
 
 
@@ -119,28 +169,13 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
     private void selectItem(int position) {
         // update the main content by replacing fragments
-        getFragmentManager().beginTransaction().replace(R.id.content_frame, AlphabetFragment.newInstance(position)).commit();
+        getFragmentManager().beginTransaction().replace(R.id.content_frame, AlphabetFragment.newInstance(mLanguages.get(position))).commit();
 
         // update selected item and title, then close the drawer
         mDrawerList.setItemChecked(position, true);
-        setTitle(mLanguages[position]);
-        switch (position) {
-            case 0:
-                tts.setLanguage(Locale.UK);
-                break;
-            case 1:
-                tts.setLanguage(Locale.US);
-                break;
-            case 2:
-                tts.setLanguage(Locale.FRENCH);
-                break;
-            case 3:
-                tts.setLanguage(Locale.GERMAN);
-                break;
-            case 4:
-                tts.setLanguage(Locale.ITALIAN);
-                break;
-        }
+        final Language lang = mLanguages.get(position);
+        setTitle(lang.getTitle());
+        tts.setLanguage(lang.getLocale());
         mDrawerLayout.closeDrawer(mDrawerList);
     }
 
@@ -172,6 +207,32 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     @Override
     public void onInit(int status) {
         if (status == TextToSpeech.SUCCESS) {
+
+            mLanguages = getLanguages();
+            // set a custom shadow that overlays the main content when the drawer opens
+        /* mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);*/
+            // set up the drawer's list view with items and click listener
+
+            String[] from = {"flag", "title"};
+            int[] to = new int[]{R.id.flag, R.id.title};
+
+            // prepare the list of all records
+            List<HashMap<String, Object>> fillMaps = new ArrayList<>();
+            for (int i = 0; i < mLanguages.size(); i++) {
+                HashMap<String, Object> map = new HashMap<>();
+                map.put(from[0], mLanguages.get(i).getFlag());
+                map.put(from[1], getString(mLanguages.get(i).getTitle()));
+                fillMaps.add(map);
+            }
+
+            // fill in the grid_item layout
+            SimpleAdapter adapter = new SimpleAdapter(this, fillMaps, R.layout.navdrawer_item, from, to);
+
+            mDrawerList.setAdapter(adapter);
+
+            if (mLanguages.size() > 0) {
+                selectItem(0);
+            }
             Log.i("TTS", "Initialization finished");
         } else {
             Log.e("TTS", "Initialization failed");

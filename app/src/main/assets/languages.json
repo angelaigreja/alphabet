@@ -1,0 +1,29 @@
+[{
+    "language": "en",
+    "country": "US",
+    "alphabet": "latin"
+}, {
+    "language": "en",
+    "country": "GB",
+    "alphabet": "latin"
+}, {
+    "language": "fr",
+    "country": "FR",
+    "alphabet": "latin"
+}, {
+    "language": "de",
+    "country": "DE",
+    "alphabet": "latin"
+}, {
+    "language": "it",
+    "country": "IT",
+    "alphabet": "italian"
+}, {
+    "language": "pt",
+    "country": "PT",
+    "alphabet": "latin"
+}, {
+    "language": "es",
+    "country": "ES",
+    "alphabet": "latin"
+}]
