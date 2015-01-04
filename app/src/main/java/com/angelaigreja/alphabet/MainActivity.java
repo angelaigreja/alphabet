@@ -2,6 +2,7 @@ package com.angelaigreja.alphabet;
 
 import android.app.Activity;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -39,6 +40,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     private List<Language> mLanguages;
 
     private TextToSpeech tts;
+    private HashMap<String, String> params = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +83,6 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         };
         mDrawerLayout.setDrawerListener(mDrawerToggle);
     }
-
 
     private Map<String, String[]> getAlphabets() {
 
@@ -151,20 +152,26 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
     }
 
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // The action bar home/up action should open or close the drawer.
         // ActionBarDrawerToggle will take care of this.
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        return mDrawerToggle.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
     }
 
     @Override
     public void onLetterClick(String letter) {
-        tts.speak(letter, TextToSpeech.QUEUE_FLUSH, null, null);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            tts.speak(letter, TextToSpeech.QUEUE_ADD, null, letter);
+        } else {
+            params.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, letter);
+            tts.speak(letter, TextToSpeech.QUEUE_ADD, params);
+        }
+    }
+
+    @Override
+    public TextToSpeech getTTS() {
+        return tts;
     }
 
     private void selectItem(int position) {
@@ -175,6 +182,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         mDrawerList.setItemChecked(position, true);
         final Language lang = mLanguages.get(position);
         setTitle(lang.getTitle());
+        tts.stop();
         tts.setLanguage(lang.getLocale());
         mDrawerLayout.closeDrawer(mDrawerList);
     }
@@ -184,11 +192,6 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         mTitle = title;
         getActionBar().setTitle(mTitle);
     }
-
-    /**
-     * When using the ActionBarDrawerToggle, you must call it during
-     * onPostCreate() and onConfigurationChanged()...
-     */
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
@@ -210,7 +213,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
             mLanguages = getLanguages();
             // set a custom shadow that overlays the main content when the drawer opens
-        /* mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);*/
+            /* mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);*/
             // set up the drawer's list view with items and click listener
 
             String[] from = {"flag", "title"};
@@ -251,7 +254,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         tts.shutdown();
     }
 
-    /* The click listner for ListView in the navigation drawer */
+    /* The click listener for ListView in the navigation drawer */
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
