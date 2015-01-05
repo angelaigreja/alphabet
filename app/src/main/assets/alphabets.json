@@ -1,4 +1,6 @@
 {
     "latin": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-    "italian": "ABCDEFGHILMNOPQRSTUVZ"
+    "italian": "ABCDEFGHILMNOPQRSTUVZ",
+    "greek": "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ",
+    "russian": "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
 }

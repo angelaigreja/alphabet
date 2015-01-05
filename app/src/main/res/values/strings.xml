@@ -12,6 +12,9 @@
     <string name="it">ITALIAN</string>
     <string name="pt">PORTUGUESE</string>
     <string name="es">SPANISH</string>
+    <string name="el">GREEK</string>
+    <string name="nl">DUTCH</string>
+    <string name="ru">RUSSIAN</string>
     <string name="error">Error playing "%1$s" in %2$s</string>
     <string name="autoplay">Autoplay is running.</string>
 

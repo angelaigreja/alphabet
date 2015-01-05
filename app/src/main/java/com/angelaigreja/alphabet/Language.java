@@ -39,6 +39,16 @@ public class Language implements Parcelable {
 
         TITLES.put("esES", R.string.es);
         FLAGS.put("esES", R.drawable.spain);
+
+        TITLES.put("elGR", R.string.el);
+        FLAGS.put("elGR", R.drawable.greece);
+
+        TITLES.put("nlNL", R.string.nl);
+        FLAGS.put("nlNL", R.drawable.netherlands);
+
+        TITLES.put("ruRU", R.string.ru);
+        FLAGS.put("ruRU", R.drawable.russia);
+
     }
 
     public static final Parcelable.Creator<Language> CREATOR
