@@ -17,6 +17,9 @@ import android.widget.GridView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  * {@link Fragment} that appears in the "content_frame and shows to alphabet for the selected language.
  * Use the {@link AlphabetFragment#newInstance} factory method to
@@ -29,6 +32,7 @@ public class AlphabetFragment extends Fragment {
 
     private int automaticIndex = 0;
     private MenuItem automaticSpeakMenuItem;
+    private Timer automaticSpeakTimer;
 
     private GridView gridView;
     private FragmentListener mListener;
@@ -65,17 +69,35 @@ public class AlphabetFragment extends Fragment {
         if (getArguments() != null) {
             mLanguage = getArguments().getParcelable(ARG_LANGUAGE);
         }
-
     }
 
     @Override
     public void onPause() {
         super.onPause();
+        gridView.setOnItemClickListener(clickListener);
         mListener.getTTS().setOnUtteranceProgressListener(null);
+        if (automaticSpeakTimer != null) {
+            automaticSpeakTimer.cancel();
+            automaticSpeakTimer = null;
+        }
         if (automaticSpeakMenuItem != null) {
             automaticSpeakMenuItem.setIcon(android.R.drawable.ic_media_play);
         }
         automaticIndex = 0;
+    }
+
+
+    public View findViewWithLetter(String letter) {
+        for (int i = 0; i < gridView.getChildCount(); ++i) {
+            View card = gridView.getChildAt(i);
+            if (card != null) {
+                TextView text = (TextView) card.findViewById(R.id.letter);
+                if (text.getText().equals(letter)) {
+                    return card;
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -85,26 +107,62 @@ public class AlphabetFragment extends Fragment {
                 automaticSpeakMenuItem = item;
                 mListener.getTTS().stop();
                 if (automaticIndex != 0) {
+                    automaticIndex = 0;
+                    if (automaticSpeakTimer != null) {
+                        automaticSpeakTimer.cancel();
+                        automaticSpeakTimer = null;
+                    }
+                    gridView.setOnItemClickListener(clickListener);
                     mListener.getTTS().setOnUtteranceProgressListener(null);
                     item.setIcon(android.R.drawable.ic_media_play);
-                    automaticIndex = 0;
                 } else {
+                    automaticSpeakTimer = new Timer(true);
+                    gridView.setOnItemClickListener(null);
                     item.setIcon(android.R.drawable.ic_media_pause);
-                    mListener.onLetterClick(mLanguage.getAlphabet()[automaticIndex++]);
                     mListener.getTTS().setOnUtteranceProgressListener(new UtteranceProgressListener() {
                         @Override
-                        public void onStart(String utteranceId) {
+                        public void onStart(final String utteranceId) {
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    final View letter = findViewWithLetter(utteranceId);
+                                    if (letter != null) {
+                                        letter.performClick();
+                                        letter.setPressed(true);
+                                        letter.invalidate();
+                                        // delay completion till animation completes
+                                        letter.postDelayed(new Runnable() {  //delay button
+                                            public void run() {
+                                                letter.setPressed(false);
+                                                letter.invalidate();
+                                                //any other associated action
+                                            }
+                                        }, 500);
+                                    }
+                                }
+                            });
+
                         }
 
                         @Override
                         public void onDone(String utteranceId) {
                             if (automaticIndex < mLanguage.getAlphabet().length) {
-                                mListener.onLetterClick(mLanguage.getAlphabet()[automaticIndex++]);
+                                automaticSpeakTimer.schedule(new TimerTask() {
+                                    @Override
+                                    public void run() {
+                                        mListener.onLetterClick(mLanguage.getAlphabet()[automaticIndex++]);
+                                    }
+                                }, 400);
                             } else {
+                                if (automaticSpeakTimer != null) {
+                                    automaticSpeakTimer.cancel();
+                                    automaticSpeakTimer = null;
+                                }
                                 mListener.getTTS().setOnUtteranceProgressListener(null);
                                 getActivity().runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
+                                        gridView.setOnItemClickListener(clickListener);
                                         automaticSpeakMenuItem.setIcon(android.R.drawable.ic_media_play);
                                     }
                                 });
@@ -117,6 +175,7 @@ public class AlphabetFragment extends Fragment {
                             getActivity().runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
+                                    gridView.setOnItemClickListener(clickListener);
                                     automaticSpeakMenuItem.setIcon(android.R.drawable.ic_media_play);
                                     Toast.makeText(getActivity(), getString(R.string.error, utteranceId,
                                             capitalizeFirstLetter(getString(mLanguage.getTitle()).toLowerCase())), Toast.LENGTH_SHORT).show();
@@ -124,6 +183,7 @@ public class AlphabetFragment extends Fragment {
                             });
                         }
                     });
+                    mListener.onLetterClick(mLanguage.getAlphabet()[automaticIndex++]);
                 }
                 return true;
         }
@@ -145,22 +205,23 @@ public class AlphabetFragment extends Fragment {
         final ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(),
                 R.layout.card, R.id.letter, mLanguage.getAlphabet());
         gridView.setAdapter(adapter);
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View v,
-                                    int position, long id) {
-                String toSpeak = ((TextView) v.findViewById(R.id.letter)).getText().toString();
-                if (mListener != null && automaticIndex == 0) {
-                    mListener.onLetterClick(toSpeak);
-                } else {
-                    Toast.makeText(getActivity(), R.string.autoplay, Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+        gridView.setOnItemClickListener(clickListener);
 
         return rootView;
     }
+
+    private AdapterView.OnItemClickListener clickListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View v,
+                                int position, long id) {
+            String toSpeak = ((TextView) v.findViewById(R.id.letter)).getText().toString();
+            if (mListener != null && automaticIndex == 0) {
+                mListener.onLetterClick(toSpeak);
+            } else {
+                Toast.makeText(getActivity(), R.string.autoplay, Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
 
     @Override
     public void onDetach() {
